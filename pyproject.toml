@@ -1,0 +1,11 @@
+[project]
+name = "competition-bakdabak-action-datamining"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.1.0",
+    "kaggle>=1.7.4.5",
+    "nbconvert>=7.16.6",
+    "roboflow>=1.2.11",
+    "ultralytics>=8.3.221",
+]
