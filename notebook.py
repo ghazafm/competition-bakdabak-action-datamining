@@ -65,5 +65,8 @@ results = model.train(
 # In[ ]:
 
 
-model.save("model/trained/"+os.getenv("YOLO_TRAINING_NAME")+".pt")
+# Create directory if it doesn't exist
+trained_model_dir = "model/trained"
+os.makedirs(trained_model_dir, exist_ok=True)
+model.save(f"{trained_model_dir}/{os.getenv('YOLO_TRAINING_NAME')}.pt")
 
