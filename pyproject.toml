@@ -8,18 +8,18 @@ dependencies = [
     "nbconvert>=7.16.6",
     "python-dotenv>=1.0.0",
     "roboflow>=1.2.11",
-    "torch==2.0.1",
-    "torchaudio==2.0.2",
-    "torchvision==0.15.2",
+    "torch==2.1.2",
+    "torchaudio==2.1.2",
+    "torchvision==0.16.2",
     "ultralytics>=8.3.221",
 ]
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu116" }
-torchaudio = { index = "pytorch-cu116" }
-torchvision = { index = "pytorch-cu116" }
+torch = { index = "pytorch-cu118" }
+torchaudio = { index = "pytorch-cu118" }
+torchvision = { index = "pytorch-cu118" }
 
 [[tool.uv.index]]
-name = "pytorch-cu116"
-url = "https://download.pytorch.org/whl/cu116"
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
 explicit = true
