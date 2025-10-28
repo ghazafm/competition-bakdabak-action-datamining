@@ -52,6 +52,7 @@ Required variables:
 - `IMG_SIZE`: Image size (default: 640)
 - `BATCH_SIZE`: Batch size (default: 10)
 - `DEVICE`: (Optional) Force device selection: `cuda`, `mps`, or `cpu`
+- `WORKERS`: Number of dataloader workers (default: 0, recommended to avoid shared memory issues)
 
 ## CUDA/GPU Issues
 
@@ -118,12 +119,48 @@ uv run notebook.py
 
 ## Troubleshooting
 
+### DataLoader bus error / shared memory issues
+
+**Symptoms:**
+- Error: "DataLoader worker is killed by signal: Bus error"
+- Error: "insufficient shared memory (shm)"
+- Training crashes when loading data
+
+**Root Cause:**
+DataLoader workers require shared memory (`/dev/shm`) which may be limited in Docker containers or some systems.
+
+**Solutions:**
+
+#### Option 1: Use 0 workers (Recommended - Always Works)
+
+In your `.env`:
+```bash
+WORKERS=0
+```
+
+This disables multiprocessing but is the most reliable solution. Training will still be fast on GPU.
+
+#### Option 2: Increase shared memory (Docker/Container environments)
+
+If running in Docker, increase shared memory:
+```bash
+docker run --shm-size=2g ...
+```
+
+For Kubernetes/cloud environments, check your pod's `/dev/shm` mount size.
+
+#### Option 3: Use fewer workers
+
+Try reducing workers gradually:
+```bash
+WORKERS=1  # or 2
+```
+
 ### Training hangs at first epoch
 
-**Fix Applied:** The code now automatically:
-- Sets `workers=0` when using CPU (prevents multiprocessing hang)
-- Sets `workers=4` when using GPU (better performance)
-- Properly detects CUDA > MPS > CPU in that priority order
+**Fix Applied:** The code now uses `workers=0` by default to prevent both:
+- Multiprocessing hangs on CPU
+- Shared memory issues on GPU
 
 ### Out of memory errors
 
@@ -131,6 +168,12 @@ Reduce batch size in `.env`:
 ```bash
 BATCH_SIZE=4  # Or even 2 for very limited memory
 ```
+
+### NumPy compatibility errors
+
+**Error:** "A module that was compiled using NumPy 1.x cannot be run in NumPy 2.x"
+
+**Fix:** Already handled in `pyproject.toml` with `numpy<2.0.0` constraint.
 
 ### Still having issues?
 

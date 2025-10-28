@@ -55,7 +55,7 @@ results = model.train(
     batch=int(os.getenv("BATCH_SIZE",10)),
     name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
-    workers=0 if device == "cpu" else 4,  # Use 0 workers on CPU to prevent hanging, 4 on GPU
+    workers=int(os.getenv("WORKERS", 0)),  # Default to 0 to avoid shared memory issues
     patience=50,  # Early stopping patience
     verbose=True,
 )
