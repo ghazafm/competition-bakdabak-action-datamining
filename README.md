@@ -117,6 +117,66 @@ python notebook.py
 uv run notebook.py
 ```
 
+## Performance Tuning
+
+### Training Speed Optimization
+
+Training speed depends on several factors:
+
+#### Check Your Shared Memory
+
+```bash
+# Run the shared memory check script
+bash check_shm.sh
+```
+
+Based on the output:
+- **If you have > 2GB shared memory**: You can use `WORKERS=2` or `WORKERS=4`
+- **If limited shared memory**: Keep `WORKERS=0`
+
+#### Recommended Settings for A100 GPU
+
+**Fast Training (if shared memory is available):**
+```bash
+DEVICE=cuda
+BATCH_SIZE=128
+WORKERS=2  # or 4 if you have plenty of shm
+EPOCHS=10
+```
+
+**Stable Training (always works):**
+```bash
+DEVICE=cuda
+BATCH_SIZE=128
+WORKERS=0  # Slower but no memory issues
+EPOCHS=10
+```
+
+**Memory-Constrained:**
+```bash
+DEVICE=cuda
+BATCH_SIZE=64
+WORKERS=0
+EPOCHS=10
+```
+
+### Understanding Training Progress
+
+When training starts, you'll see:
+1. **Training phase**: `Epoch X/Y` with progress bar showing batches
+2. **Validation phase**: May appear to pause (especially with `workers=0`) while validating
+3. **Next epoch**: Continues automatically
+
+**Example output:**
+```
+Epoch 1/10    GPU_mem  loss  Instances  Size
+1/10          58.4G    2.767    36      640: 100% 10/10 44.6s
+(validation running...)
+Epoch 2/10    ...
+```
+
+If training appears stuck after an epoch completes, **wait 30-60 seconds** - it's likely running validation.
+
 ## Troubleshooting
 
 ### DataLoader bus error / shared memory issues
