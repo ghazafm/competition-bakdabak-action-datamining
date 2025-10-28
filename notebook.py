@@ -25,8 +25,23 @@ dataset = version.download("folder",location="data")
 
 
 model = YOLO("model/yolo/"+os.getenv("YOLO_MODEL_NAME"))
-device = os.getenv("DEVICE") if torch.backends.mps.is_available() else "cpu"
-print("Using device:", device)
+
+# Improved device detection: CUDA > MPS > CPU
+if torch.cuda.is_available():
+    device = "cuda"
+    print(f"Using device: cuda (GPU: {torch.cuda.get_device_name(0)})")
+elif torch.backends.mps.is_available():
+    device = "mps"
+    print("Using device: mps (Apple Silicon)")
+else:
+    device = "cpu"
+    print("Using device: cpu (No GPU detected)")
+
+# Allow environment override
+if os.getenv("DEVICE"):
+    device = os.getenv("DEVICE")
+    print(f"Device overridden by env: {device}")
+
 model.to(device)
 
 
@@ -40,6 +55,9 @@ results = model.train(
     batch=int(os.getenv("BATCH_SIZE",10)),
     name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
+    workers=0 if device == "cpu" else 4,  # Use 0 workers on CPU to prevent hanging, 4 on GPU
+    patience=50,  # Early stopping patience
+    verbose=True,
 )
 
 
