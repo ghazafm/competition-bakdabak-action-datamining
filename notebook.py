@@ -56,6 +56,7 @@ results = model.train(
     name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
     workers=int(os.getenv("WORKERS", 0)),  # Default to 0 to avoid shared memory issues
+    cache=True,  # Cache images in RAM for faster loading (helps with workers=0)
     patience=50,  # Early stopping patience
     verbose=True,
 )
