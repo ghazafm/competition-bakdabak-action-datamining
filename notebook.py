@@ -24,8 +24,8 @@ dataset = version.download("folder",location="data")
 # In[ ]:
 
 
-model = YOLO("model/yolo/yolo11l-cls.pt")
-device = "mps" if torch.backends.mps.is_available() else "cpu"
+model = YOLO("model/yolo/"+os.getenv("YOLO_MODEL_NAME"))
+device = os.getenv("DEVICE") if torch.backends.mps.is_available() else "cpu"
 print("Using device:", device)
 model.to(device)
 
@@ -35,10 +35,10 @@ model.to(device)
 
 results = model.train(
     data="data/train",
-    epochs=10,
-    imgsz=640,
-    batch=10,
-    name="yolo11l-bakdabak-action-datamining",
+    epochs=int(os.getenv("EPOCHS",10)),
+    imgsz=int(os.getenv("IMG_SIZE",640)),
+    batch=int(os.getenv("BATCH_SIZE",10)),
+    name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
 )
 
@@ -46,5 +46,5 @@ results = model.train(
 # In[ ]:
 
 
-model.save("model/trained/yolo11l-bakdabak-action-datamining.pt")
+model.save("model/trained/"+os.getenv("YOLO_TRAINING_NAME")+".pt")
 
