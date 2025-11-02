@@ -17,7 +17,7 @@ import time
 
 load_dotenv()
 start_time = time.time()
-data_version = os.getenv("DATA_VERSION", "1")
+data_version = os.getenv("ROBOFLOW_DATA_VERSION", "1")
 rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
 project = rf.workspace(os.getenv("ROBOFLOW_WORKSPACE_NAME")).project(os.getenv("ROBOFLOW_PROJECT_NAME"))
 version = project.version(2)
