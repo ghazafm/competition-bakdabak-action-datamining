@@ -12,7 +12,7 @@ import os
 import time
 
 
-# In[ ]:
+# In[6]:
 
 
 load_dotenv()
@@ -27,7 +27,7 @@ dataset = version.download("folder",location=f"data/{data_version}")
 # In[ ]:
 
 
-model = YOLO("model/yolo/"+os.getenv("YOLO_MODEL_NAME"))
+model = YOLO("model/" + os.getenv("MODE") + "/yolo/" + os.getenv("YOLO_MODEL_NAME"))
 if torch.cuda.is_available():
     device = "cuda"
     print(f"Using device: cuda (GPU: {torch.cuda.get_device_name(0)})")
