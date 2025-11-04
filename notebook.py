@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[1]:
 
 
 import torch
@@ -12,7 +12,7 @@ import os
 import time
 
 
-# In[6]:
+# In[2]:
 
 
 load_dotenv()
@@ -20,14 +20,17 @@ start_time = time.time()
 data_version = os.getenv("ROBOFLOW_DATA_VERSION", "1")
 rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
 project = rf.workspace(os.getenv("ROBOFLOW_WORKSPACE_NAME")).project(os.getenv("ROBOFLOW_PROJECT_NAME"))
-version = project.version(2)
+version = project.version(data_version)
 dataset = version.download("folder",location=f"data/{data_version}")
 
 
 # In[ ]:
 
 
-model = YOLO("model/" + os.getenv("MODE") + "/yolo/" + os.getenv("YOLO_MODEL_NAME"))
+yolo_model_version = os.getenv("YOLO_MODEL_VERSION", "8")
+yolo_model_size = os.getenv("YOLO_MODEL_SIZE", "l")
+yolo_model_name = f"yolov{yolo_model_version}{yolo_model_size}cls.pt"
+model = YOLO("model/" + os.getenv("MODE") + "/yolo/" + yolo_model_name)
 if torch.cuda.is_available():
     device = "cuda"
     print(f"Using device: cuda (GPU: {torch.cuda.get_device_name(0)})")
@@ -65,7 +68,7 @@ results = model.train(
 # In[ ]:
 
 
-trained_model_dir = f"model/trained/{data_version}/{int(start_time)}"
+trained_model_dir = f"model/trained/{data_version}/{yolo_model_version}/{yolo_model_size}/{int(start_time)}"
 os.makedirs(trained_model_dir, exist_ok=True)
 model.save(f"{trained_model_dir}/{os.getenv('YOLO_TRAINING_NAME')}.pt")
 
