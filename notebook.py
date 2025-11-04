@@ -20,7 +20,7 @@ start_time = time.time()
 data_version = os.getenv("ROBOFLOW_DATA_VERSION", "1")
 rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
 project = rf.workspace(os.getenv("ROBOFLOW_WORKSPACE_NAME")).project(os.getenv("ROBOFLOW_PROJECT_NAME"))
-version = project.version(data_version)
+version = project.version(int(data_version))
 dataset = version.download("folder",location=f"data/{data_version}")
 
 
@@ -53,7 +53,7 @@ model.to(device)
 
 
 results = model.train(
-    data="data/train",
+    data=f"data/{data_version}",
     epochs=int(os.getenv("EPOCHS", 10)),
     imgsz=int(os.getenv("IMG_SIZE", 640)),
     batch=int(os.getenv("BATCH_SIZE", 10)),
