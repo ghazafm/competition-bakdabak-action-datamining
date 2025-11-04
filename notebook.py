@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import torch
@@ -12,7 +12,7 @@ import os
 import time
 
 
-# In[2]:
+# In[ ]:
 
 
 load_dotenv()
@@ -29,7 +29,7 @@ dataset = version.download("folder",location=f"data/{data_version}")
 
 yolo_model_version = os.getenv("YOLO_MODEL_VERSION", "8")
 yolo_model_size = os.getenv("YOLO_MODEL_SIZE", "l")
-yolo_model_name = f"yolov{yolo_model_version}{yolo_model_size}cls.pt"
+yolo_model_name = f"yolov{yolo_model_version}{yolo_model_size}-cls.pt"
 model = YOLO("model/" + os.getenv("MODE") + "/yolo/" + yolo_model_name)
 if torch.cuda.is_available():
     device = "cuda"
