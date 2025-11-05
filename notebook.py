@@ -45,24 +45,29 @@ data_root = Path(f"data/{data_version}").resolve()
 if data_root.name.lower() == "train":
     data_root = data_root.parent
 
+# Ensure YOLO finds validation: if 'val' missing but 'valid' or 'validation' exists, create a 'val' symlink
+val_path = data_root / "val"
+if not val_path.exists():
+    for alt in ("valid", "validation"):
+        alt_path = data_root / alt
+        if alt_path.exists() and alt_path.is_dir():
+            try:
+                os.symlink(alt_path, val_path)
+                print(f"Created symlink: {val_path} -> {alt_path}")
+            except FileExistsError:
+                pass
+            except OSError as e:
+                print(f"Warning: could not create symlink {val_path} -> {alt_path} ({e}). YOLO may auto-split.")
+            break
+
 train_dir = (data_root / "train") if (data_root / "train").exists() else data_root
-
-
-val_candidates = [
-    data_root / "val",
-    data_root / "valid",
-    data_root / "validation",
-]
-val_dir = next((p for p in val_candidates if p.exists() and p.is_dir()), None)
-
-if val_dir is not None:
-    yolo_data_arg = {"train": str(train_dir), "val": str(val_dir)}
-    print(f"Resolved dataset - train: {train_dir}, val: {val_dir}")
+if val_path.exists() and val_path.is_dir():
+    print(f"Resolved dataset - train: {train_dir}, val: {val_path}")
 else:
-    yolo_data_arg = {"train": str(train_dir), "val": str(train_dir)}
-    print(
-        f"Resolved dataset - train: {train_dir}. No validation folder found; using train for validation as well."
-    )
+    print("No validation folder detected; Ultralytics will auto-split from training data.")
+
+# For Ultralytics classification, pass the dataset root path (string), not a dict
+yolo_data_arg = str(data_root)
 
 results = model.train(
     data=yolo_data_arg,
