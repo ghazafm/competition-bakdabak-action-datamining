@@ -45,14 +45,16 @@ data_root = Path(f"data/{data_version}").resolve()
 if data_root.name.lower() == "train":
     data_root = data_root.parent
 
-# Prefer passing the parent that contains 'train/' so Ultralytics can manage splits
-if (data_root / "train").exists():
-    yolo_data_arg = str(data_root)
-else:
-    # Fallback: if there's no 'train' folder, pass as-is (Ultralytics may handle flat dirs)
-    yolo_data_arg = str(data_root)
+# Prefer passing explicit splits. If no 'val' folder, reuse 'train' for validation to avoid NoneType errors.
+train_dir = (data_root / "train") if (data_root / "train").exists() else data_root
+val_dir = data_root / "val"
 
-print(f"Resolved dataset root for YOLO: {yolo_data_arg}")
+if val_dir.exists() and val_dir.is_dir():
+    yolo_data_arg = {"train": str(train_dir), "val": str(val_dir)}
+    print(f"Resolved dataset - train: {train_dir}, val: {val_dir}")
+else:
+    yolo_data_arg = {"train": str(train_dir), "val": str(train_dir)}
+    print(f"Resolved dataset - train: {train_dir}. No 'val' folder found; using train for validation as well.")
 
 results = model.train(
     data=yolo_data_arg,
