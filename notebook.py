@@ -45,19 +45,10 @@ data_root = Path(f"data/{data_version}").resolve()
 if data_root.name.lower() == "train":
     data_root = data_root.parent
 
-# Prefer passing explicit splits. If no 'val' folder, reuse 'train' for validation to avoid NoneType errors.
-train_dir = (data_root / "train") if (data_root / "train").exists() else data_root
-val_dir = data_root / "val"
-
-if val_dir.exists() and val_dir.is_dir():
-    yolo_data_arg = {"train": str(train_dir), "val": str(val_dir)}
-    print(f"Resolved dataset - train: {train_dir}, val: {val_dir}")
-else:
-    yolo_data_arg = {"train": str(train_dir), "val": str(train_dir)}
-    print(f"Resolved dataset - train: {train_dir}. No 'val' folder found; using train for validation as well.")
+# Prefer passing explicit splits. If no validation folder, reuse 'train' for validation to avoid NoneType errors.
 
 results = model.train(
-    data=yolo_data_arg,
+    data=data_root,
     epochs=int(os.getenv("EPOCHS", 10)),
     imgsz=int(os.getenv("IMG_SIZE", 640)),
     batch=int(os.getenv("BATCH_SIZE", 10)),
