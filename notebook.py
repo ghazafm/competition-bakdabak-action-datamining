@@ -31,31 +31,48 @@ else:
     device = "cpu"
     print("Using device: cpu (No GPU detected)")
 
-# Allow environment override
+
 if os.getenv("DEVICE"):
     device = os.getenv("DEVICE")
     print(f"Device overridden by env: {device}")
 
 model.to(device)
 
-# Resolve dataset root robustly so YOLO doesn't double-append '/train'
+
 data_root = Path(f"data/{data_version}").resolve()
 
-# If user accidentally points to .../train, step up to parent
+
 if data_root.name.lower() == "train":
     data_root = data_root.parent
 
-# Prefer passing explicit splits. If no validation folder, reuse 'train' for validation to avoid NoneType errors.
+train_dir = (data_root / "train") if (data_root / "train").exists() else data_root
+
+
+val_candidates = [
+    data_root / "val",
+    data_root / "valid",
+    data_root / "validation",
+]
+val_dir = next((p for p in val_candidates if p.exists() and p.is_dir()), None)
+
+if val_dir is not None:
+    yolo_data_arg = {"train": str(train_dir), "val": str(val_dir)}
+    print(f"Resolved dataset - train: {train_dir}, val: {val_dir}")
+else:
+    yolo_data_arg = {"train": str(train_dir), "val": str(train_dir)}
+    print(
+        f"Resolved dataset - train: {train_dir}. No validation folder found; using train for validation as well."
+    )
 
 results = model.train(
-    data=data_root,
+    data=yolo_data_arg,
     epochs=int(os.getenv("EPOCHS", 10)),
     imgsz=int(os.getenv("IMG_SIZE", 640)),
     batch=int(os.getenv("BATCH_SIZE", 10)),
     name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
     workers=int(os.getenv("WORKERS", 0)),
-    patience=50,  # Early stopping patience
+    patience=50,
     verbose=True,
 )
 
