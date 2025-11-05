@@ -37,7 +37,7 @@ if os.getenv("DEVICE"):
 
 model.to(device)
 
-data_dir = f"data/{data_version}"
+data_dir = f"data/{data_version}/train"
 
 results = model.train(
     data=data_dir,
