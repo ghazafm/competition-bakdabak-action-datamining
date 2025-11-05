@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 
 import torch
 from dotenv import load_dotenv
@@ -37,10 +38,24 @@ if os.getenv("DEVICE"):
 
 model.to(device)
 
-data_dir = f"data/{data_version}/train"
+# Resolve dataset root robustly so YOLO doesn't double-append '/train'
+data_root = Path(f"data/{data_version}").resolve()
+
+# If user accidentally points to .../train, step up to parent
+if data_root.name.lower() == "train":
+    data_root = data_root.parent
+
+# Prefer passing the parent that contains 'train/' so Ultralytics can manage splits
+if (data_root / "train").exists():
+    yolo_data_arg = str(data_root)
+else:
+    # Fallback: if there's no 'train' folder, pass as-is (Ultralytics may handle flat dirs)
+    yolo_data_arg = str(data_root)
+
+print(f"Resolved dataset root for YOLO: {yolo_data_arg}")
 
 results = model.train(
-    data=data_dir,
+    data=yolo_data_arg,
     epochs=int(os.getenv("EPOCHS", 10)),
     imgsz=int(os.getenv("IMG_SIZE", 640)),
     batch=int(os.getenv("BATCH_SIZE", 10)),
