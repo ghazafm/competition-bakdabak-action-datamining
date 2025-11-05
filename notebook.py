@@ -38,24 +38,6 @@ if os.getenv("DEVICE"):
 model.to(device)
 
 data_dir = f"data/{data_version}"
-val_exists = os.path.isdir(os.path.join(data_dir, "val")) or os.path.isdir(
-    os.path.join(data_dir, "valid")
-)
-
-# Determine training parameters based on validation folder existence
-if not val_exists:
-    print(
-        f"No validation folder found in '{data_dir}'. Training without validation."
-    )
-    # Create a temporary val symlink to avoid errors
-    val_link = os.path.join(data_dir, "val")
-    if not os.path.exists(val_link):
-        os.symlink(os.path.join(data_dir, "train"), val_link)
-        print(f"Created temporary validation symlink: {val_link}")
-else:
-    print(
-        f"Validation folder found in '{data_dir}'; running training with validation enabled."
-    )
 
 results = model.train(
     data=data_dir,
@@ -64,7 +46,7 @@ results = model.train(
     batch=int(os.getenv("BATCH_SIZE", 10)),
     name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
-    workers=int(os.getenv("WORKERS", 0)),  # Default to 0 to avoid shared memory issues
+    workers=int(os.getenv("WORKERS", 0)),
     patience=50,  # Early stopping patience
     verbose=True,
 )
