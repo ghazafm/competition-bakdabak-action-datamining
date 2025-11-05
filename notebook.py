@@ -1,31 +1,20 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-import torch
-from roboflow import Roboflow
-from ultralytics import YOLO
-from dotenv import load_dotenv
 import os
 import time
 
-
-# In[ ]:
-
+import torch
+from dotenv import load_dotenv
+from roboflow import Roboflow
+from ultralytics import YOLO
 
 load_dotenv()
 start_time = time.time()
 data_version = os.getenv("ROBOFLOW_DATA_VERSION", "1")
 rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
-project = rf.workspace(os.getenv("ROBOFLOW_WORKSPACE_NAME")).project(os.getenv("ROBOFLOW_PROJECT_NAME"))
+project = rf.workspace(os.getenv("ROBOFLOW_WORKSPACE_NAME")).project(
+    os.getenv("ROBOFLOW_PROJECT_NAME")
+)
 version = project.version(int(data_version))
-dataset = version.download("folder",location=f"data/{data_version}")
-
-
-# In[ ]:
-
+dataset = version.download("folder", location=f"data/{data_version}")
 
 yolo_model_version = os.getenv("YOLO_MODEL_VERSION", "8")
 yolo_model_size = os.getenv("YOLO_MODEL_SIZE", "l")
@@ -48,12 +37,21 @@ if os.getenv("DEVICE"):
 
 model.to(device)
 
-
-# In[ ]:
-
+data_dir = f"data/{data_version}"
+val_exists = os.path.isdir(os.path.join(data_dir, "val")) or os.path.isdir(
+    os.path.join(data_dir, "valid")
+)
+if not val_exists:
+    print(
+        f"No validation folder found in '{data_dir}'. Running training with val=False to avoid loader error."
+    )
+else:
+    print(
+        f"Validation folder found in '{data_dir}'; running training with validation enabled."
+    )
 
 results = model.train(
-    data=f"data/{data_version}",
+    data=data_dir,
     epochs=int(os.getenv("EPOCHS", 10)),
     imgsz=int(os.getenv("IMG_SIZE", 640)),
     batch=int(os.getenv("BATCH_SIZE", 10)),
@@ -62,13 +60,9 @@ results = model.train(
     workers=int(os.getenv("WORKERS", 0)),  # Default to 0 to avoid shared memory issues
     patience=50,  # Early stopping patience
     verbose=True,
+    val=val_exists,
 )
-
-
-# In[ ]:
-
 
 trained_model_dir = f"model/trained/{data_version}/{yolo_model_version}/{yolo_model_size}/{int(start_time)}"
 os.makedirs(trained_model_dir, exist_ok=True)
 model.save(f"{trained_model_dir}/{os.getenv('YOLO_TRAINING_NAME')}.pt")
-
