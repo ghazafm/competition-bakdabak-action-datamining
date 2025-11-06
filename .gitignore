@@ -214,3 +214,4 @@ data/*
 model/*
 *.json
 *.zip
+runs/*

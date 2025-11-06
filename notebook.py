@@ -12,6 +12,7 @@ import torch
 from dotenv import load_dotenv
 from roboflow import Roboflow
 from ultralytics import YOLO
+import shutil
 
 
 # In[ ]:
@@ -69,14 +70,17 @@ if old_dir.exists():
 else:
     print(f"'{old_dir}' not found. Nothing to rename.")
 
+train_name = os.getenv("YOLO_TRAINING_NAME", f"run-{int(start_time)}")
+
 
 # In[ ]:
 
 
+imgsz = int(os.getenv("IMG_SIZE", 640))
 results = model.train(
     data=data_dir,
     epochs=int(os.getenv("EPOCHS", 10)),
-    imgsz=int(os.getenv("IMG_SIZE", 640)),
+    imgsz=imgsz,
     batch=int(os.getenv("BATCH_SIZE", 10)),
     name=os.getenv("YOLO_TRAINING_NAME"),
     exist_ok=True,
@@ -89,7 +93,47 @@ results = model.train(
 # In[ ]:
 
 
-trained_model_dir = f"model/trained/{data_version}/{yolo_model_version}/{yolo_model_size}/{int(start_time)}"
-os.makedirs(trained_model_dir, exist_ok=True)
-model.save(f"{trained_model_dir}/{os.getenv('YOLO_TRAINING_NAME')}.pt")
+model.val(data=str(data_dir), device=device)
+
+
+# In[ ]:
+
+
+trained_model_dir = Path(
+    f"model/trained/{data_version}/{yolo_model_version}/{yolo_model_size}/{int(start_time)}"
+)
+trained_model_dir.mkdir(parents=True, exist_ok=True)
+
+# results.save_dir is the run folder; best.pt is always in weights/
+best_path = Path(results.save_dir) / "weights" / "best.pt"
+dst_path = trained_model_dir / f"{train_name}.pt"
+if best_path.exists():
+    shutil.copy2(best_path, dst_path)
+    print("Saved best weights to:", dst_path)
+else:
+    print("[warn] best.pt not found at", best_path)
+
+if best_path.exists():
+    exp_model = YOLO(str(best_path))
+    exp_model.export(
+        format="onnx",
+        imgsz=imgsz,
+        device=device,
+        opset=12,
+        dynamic=True,
+        simplify=True,
+    )
+
+    onnx_candidates = [
+        best_path.with_suffix(".onnx"),
+        Path(results.save_dir) / "weights" / "best.onnx",
+        Path(results.save_dir) / "best.onnx",
+    ]
+    onnx_src = next((p for p in onnx_candidates if p.exists()), None)
+    if onnx_src:
+        dst_onnx = trained_model_dir / f"{train_name}.onnx"
+        shutil.copy2(onnx_src, dst_onnx)
+        print("Saved ONNX export to:", dst_onnx)
+    else:
+        print("[warn] Could not locate exported ONNX file after export()")
 
