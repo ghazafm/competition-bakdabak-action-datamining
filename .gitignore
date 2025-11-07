@@ -215,3 +215,6 @@ model/*
 *.json
 *.zip
 runs/*
+*.csv
+*.txt
+*.png
